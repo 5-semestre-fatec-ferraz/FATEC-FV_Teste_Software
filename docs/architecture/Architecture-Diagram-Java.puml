@@ -1,0 +1,280 @@
+@startuml "Sistema de Autenticação - Caso de Uso Login (Java / Spring)"
+
+' ==============================================================================
+' 🎨 PLANTUML CSS & SKINPARAM STYLING ENGINE
+' ==============================================================================
+skinparam backgroundColor #FEFEFE
+<style>
+  root {
+    backgroundColor #FEFEFE
+    FontName "Inter", "Segoe UI", "Helvetica Neue", sans-serif
+    FontSize 11
+    FontColor #0F172A
+  }
+  document {
+    backgroundColor #FEFEFE
+  }
+  package {
+    RoundCorner 10
+    LineThickness 1.5
+    FontSize 12
+    FontStyle bold
+  }
+  component {
+    RoundCorner 8
+    LineThickness 1.2
+    FontSize 11
+    backgroundColor #FEFEFE
+  }
+  interface {
+    LineThickness 1.5
+    FontSize 11
+  }
+  arrow {
+    LineThickness 1.3
+    FontSize 10
+  }
+  note {
+    RoundCorner 10
+    LineThickness 1.2
+    FontSize 11
+    BackgroundColor #FEFCE8
+    LineColor #EAB308
+    FontColor #713F12
+  }
+  legend {
+    RoundCorner 10
+    LineThickness 1.2
+    FontSize 10
+    BackgroundColor #F8FAFC
+    LineColor #CBD5E1
+    FontColor #0F172A
+  }
+</style>
+
+skinparam defaultFontName "Inter", "Segoe UI", "Helvetica Neue", sans-serif
+skinparam shadowing false
+skinparam roundCorner 8
+hide stereotype
+
+' --- 0. CLIENT / FRONTEND & DELIVERY (Índigo) ---
+skinparam package<<delivery>> {
+  BackgroundColor #EEF2FF
+  BorderColor #6366F1
+  FontColor #312E81
+}
+skinparam component<<deliveryComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #818CF8
+  FontColor #1E1B4B
+}
+
+' --- 1. FILTER CHAIN / SEGURANÇA (Âmbar/Dourado) ---
+skinparam package<<filterChain>> {
+  BackgroundColor #FFFBEB
+  BorderColor #F59E0B
+  FontColor #78350F
+}
+skinparam component<<filterComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #FBBF24
+  FontColor #451A03
+}
+
+' --- 2. PRESENTATION / REST CONTROLLER (Rosa/Magenta) ---
+skinparam package<<presentation>> {
+  BackgroundColor #FDF2F8
+  BorderColor #EC4899
+  FontColor #831843
+}
+skinparam component<<presentationComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #F472B6
+  FontColor #831843
+}
+
+' --- 3. APPLICATION (Azul Oceano) ---
+skinparam package<<application>> {
+  BackgroundColor #EFF6FF
+  BorderColor #3B82F6
+  FontColor #1E3A8A
+}
+skinparam component<<applicationComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #60A5FA
+  FontColor #1E3A8A
+}
+
+' --- 4. DOMAIN (Verde Esmeralda - Pure Core) ---
+skinparam package<<domain>> {
+  BackgroundColor #ECFDF5
+  BorderColor #10B981
+  FontColor #064E3B
+}
+skinparam package<<domainSub>> {
+  BackgroundColor #F0FDF4
+  BorderColor #34D399
+  FontColor #065F46
+}
+skinparam component<<domainComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #10B981
+  FontColor #064E3B
+}
+skinparam interface<<domainContract>> {
+  backgroundColor #FEFEFE
+  BorderColor #059669
+  FontColor #065F46
+}
+
+' --- 5. INFRASTRUCTURE (Roxo / Violeta) ---
+skinparam package<<infra>> {
+  BackgroundColor #FAF5FF
+  BorderColor #8B5CF6
+  FontColor #4C1D95
+}
+skinparam component<<infraComp>> {
+  backgroundColor #FEFEFE
+  BorderColor #A78BFA
+  FontColor #4C1D95
+}
+
+' ==============================================================================
+' 0. CLIENT & SPRING BOOT WEB DELIVERY
+' ==============================================================================
+package "0. 🌐 Clients & HTTP Delivery (Spring Web / Tomcat)" as DeliveryLayer <<delivery>> {
+    [<b>Client Interface (Web/SPA/Mobile)</b>\n<size:10><i>POST /api/v1/auth/login</i></size>] as Client <<deliveryComp>>
+    [<b>DispatcherServlet</b>\n<size:10><i>Front Controller Java (Servlet Engine)</i></size>] as Dispatcher <<deliveryComp>>
+    [<b>Spring ApplicationContext</b>\n<size:10><i>IoC Container (@Autowired / DI)</i></size>] as SpringIoC <<deliveryComp>>
+}
+
+' ==============================================================================
+' 1. SECURITY FILTER CHAIN (Servlet Filters)
+' ==============================================================================
+package "1. 🛡️ Pipeline de Filtros de Segurança (Spring SecurityFilterChain)" as FilterLayer <<filterChain>> {
+    [<b>HeaderWriterFilter</b>\n<size:10><i>Headers OWASP (HSTS, CSP, X-Frame-Options)</i></size>] as SecHeadersFilter <<filterComp>>
+    [<b>CsrfFilter</b>\n<size:10><i>Validação Anti-CSRF Token / Cookie</i></size>] as CsrfFilter <<filterComp>>
+    [<b>RateLimiterFilter</b>\n<size:10><i>Proteção contra Brute Force (Bucket4j / Redis)</i></size>] as RateFilter <<filterComp>>
+}
+
+' ==============================================================================
+' 2. PRESENTATION LAYER (REST Controller & Validation)
+' ==============================================================================
+package "2. 🎯 Camada de Apresentação (@RestController)" as PresentationLayer <<presentation>> {
+    [<b>AuthController</b>\n<size:10><i>@PostMapping("/login") + @Valid</i></size>] as AuthController <<presentationComp>>
+    [<b>Jackson ObjectMapper</b>\n<size:10><i>Serialização/Deserialização JSON automática</i></size>] as JacksonMapper <<presentationComp>>
+}
+
+' ==============================================================================
+' 3. APPLICATION LAYER (Use Cases & DTO Records)
+' ==============================================================================
+package "3. ⚙️ Camada de Aplicação (Service / Use Case)" as ApplicationLayer <<application>> {
+    [<b>LoginRequestDTO & LoginResponseDTO</b>\n<size:10><i>Java Records (Imutáveis com Bean Validation @NotBlank, @Email)</i></size>] as DTOs <<applicationComp>>
+    [<b>AuthenticateUserUseCase</b>\n<size:10><i>Orquestra verificação de credenciais, status e auditoria</i></size>] as AuthUseCase <<applicationComp>>
+}
+
+' ==============================================================================
+' 4. DOMAIN LAYER (Pure Java Business Logic)
+' ==============================================================================
+package "4. 💎 Camada de Domínio (Java Core - Sem dependências externas)" as DomainLayer <<domain>> {
+    [<b>User (Entity)</b>\n<size:10><i>UUID id, Email email, PasswordHash hash, Status status</i></size>] as UserEntity <<domainComp>>
+
+    package "Value Objects (Records / Imutáveis)" as DomainVOs <<domainSub>> {
+        [<b>Email (VO)</b>\n<size:10><i>Garante formato RFC e regras de domínio</i></size>] as EmailVO <<domainComp>>
+        [<b>Password (VO)</b>\n<size:10><i>Representação e validação de complexidade</i></size>] as PasswordVO <<domainComp>>
+    }
+
+    package "Portas de Repositório (DIP)" as DomainContracts <<domainSub>> {
+        interface "UserRepository" as UserRepoInterface <<domainContract>>
+        interface "PasswordEncoder" as PasswordEncoderInterface <<domainContract>>
+    }
+}
+
+' ==============================================================================
+' 5. INFRASTRUCTURE & ADAPTERS
+' ==============================================================================
+package "5. 🔌 Camada de Infraestrutura (Adaptadores Técnicos)" as InfraLayer <<infra>> {
+    [<b>JpaUserRepositoryAdapter</b>\n<size:10><i>Implementa UserRepository via Spring Data JPA / Hibernate</i></size>] as JpaRepoAdapter <<infraComp>>
+    [<b>BCryptPasswordEncoderAdapter</b>\n<size:10><i>Implementa PasswordEncoder usando BCrypt</i></size>] as BCryptAdapter <<infraComp>>
+    [<b>HttpSession / JwtTokenService</b>\n<size:10><i>Criação de Sessão Segura ou Geração de Token Bearer</i></size>] as SessionAdapter <<infraComp>>
+    [<b>SecurityAuditor (SLF4J / Logback)</b>\n<size:10><i>Logs estruturados de auditoria de login</i></size>] as LoggerInfra <<infraComp>>
+}
+
+' ==============================================================================
+' NOTAS DIDÁTICAS
+' ==============================================================================
+note right of PresentationLayer
+  <b>🎯 REST Controller & Validation</b>
+  • Recebe JSON do corpo da requisição.
+  • Valida anotações (@Valid: @Email, @NotBlank).
+  • Invoca o Caso de Uso desacoplado de HTTP.
+end note
+
+note left of DomainLayer
+  <b>💎 Clean Architecture em Java</b>
+  O pacote <b>Domain</b> contém POJOs e Interfaces puras.
+  Não possui anotações de banco (JPA/Hibernate) nem
+  referências ao Spring Framework.
+end note
+
+' ==============================================================================
+' HIERARQUIA VERTICAL
+' ==============================================================================
+DeliveryLayer -[hidden]down-> FilterLayer
+FilterLayer -[hidden]down-> PresentationLayer
+PresentationLayer -[hidden]down-> ApplicationLayer
+ApplicationLayer -[hidden]down-> DomainLayer
+DomainLayer -[hidden]down-> InfraLayer
+
+' ==============================================================================
+' FLUXO DE EXECUÇÃO (CASO DE USO DE LOGIN)
+' ==============================================================================
+
+' --- 1. REQUISIÇÃO & FILTROS ---
+Client -[#2563EB,bold]-> Dispatcher : 1. POST /login { email, password }
+Dispatcher -[#2563EB,bold]-> SecHeadersFilter : 2. Intercepta requisição no FilterChain
+SecHeadersFilter -[#2563EB]-> CsrfFilter : Injeta headers de segurança
+CsrfFilter -[#2563EB]-> RateFilter : Valida token CSRF
+RateFilter -[#2563EB]-> AuthController : Verifica cota de requisições / IP
+
+' --- 2. INJEÇÃO DE DEPENDÊNCIAS (SPRING IOC) ---
+SpringIoC ..[#7C3AED,dashed]> AuthController : @Autowired AuthenticateUserUseCase
+SpringIoC ..[#7C3AED,dashed]> AuthUseCase : @Autowired UserRepository, PasswordEncoder
+SpringIoC ..[#7C3AED,dashed]> JpaRepoAdapter : Gerencia ciclo de vida do Bean
+
+' --- 3. APRESENTAÇÃO -> APLICAÇÃO ---
+AuthController -[#2563EB]-> JacksonMapper : Deserializa payload para LoginRequestDTO
+AuthController -[#2563EB,bold]-> AuthUseCase : Executa execute(requestDTO)
+
+' --- 4. EXECUÇÃO DO CASO DE USO NO DOMÍNIO ---
+AuthUseCase -[#2563EB]-> EmailVO : Instancia novo Email(request.email())
+AuthUseCase -[#2563EB]-> UserRepoInterface : Consulta findByEmail(email)
+UserRepoInterface -[#2563EB]-> UserEntity : Retorna entidade de usuário
+AuthUseCase -[#2563EB]-> UserEntity : Valida status da conta (user.isActive())
+AuthUseCase -[#2563EB]-> PasswordEncoderInterface : Valida matches(rawPassword, user.getPasswordHash())
+
+' --- 5. SESSÃO / TOKEN & RESPOSTA ---
+AuthUseCase -[#0284C7]-> SessionAdapter : Registra sessão ativa ou emite JWT
+AuthUseCase -[#7C3AED]-> LoggerInfra : Registra log de auditoria (sucesso/falha)
+AuthUseCase -[#2563EB]-> DTOs : Retorna LoginResponseDTO
+AuthController -[#2563EB]-> JacksonMapper : Serializa ResponseEntity<LoginResponseDTO> (HTTP 200)
+Dispatcher -[#2563EB]-> Client : Retorna JSON { "token": "...", "status": "SUCCESS" }
+
+' --- 6. INVERSÃO DE DEPENDÊNCIA (DIP) ---
+UserRepoInterface <|.[#059669,bold]. JpaRepoAdapter : <b><color:#059669>[DIP]</color></b> Implementa Interface
+PasswordEncoderInterface <|.[#059669,bold]. BCryptAdapter : <b><color:#059669>[DIP]</color></b> Implementa Interface
+
+' ==============================================================================
+' LEGENDA
+' ==============================================================================
+legend right
+  | <size:12><b>CAMADA</b></size> | <size:12><b>EQUIVALENTE JAVA / SPRING</b></size> |
+  | <back:#EEF2FF><color:#312E81><b> 0. Delivery </b></color></back> | DispatcherServlet, Embedded Tomcat, Spring ApplicationContext |
+  | <back:#FFFBEB><color:#78350F><b> 1. Filtros / Segurança </b></color></back> | SecurityFilterChain (HeaderWriterFilter, CsrfFilter, RateLimiter) |
+  | <back:#FDF2F8><color:#831843><b> 2. Apresentação </b></color></back> | @RestController, Jackson ObjectMapper, Bean Validation |
+  | <back:#EFF6FF><color:#1E3A8A><b> 3. Aplicação </b></color></back> | AuthenticateUserUseCase, Java Records (DTOs) |
+  | <back:#ECFDF5><color:#064E3B><b> 4. Domínio Puro </b></color></back> | User Entity, Email VO, Password VO, UserRepository Interface |
+  | <back:#FAF5FF><color:#4C1D95><b> 5. Infraestrutura </b></color></back> | Spring Data JPA Adapter, BCryptPasswordEncoder, SLF4J Auditor |
+endlegend
+
+@enduml
